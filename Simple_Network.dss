@@ -1,0 +1,81 @@
+
+Set DefaultBaseFrequency=50 ! delete this line if your default frequency is already 50 Hz
+
+clear
+
+!set datapath = F:\Lac6_MATLAB\Results
+
+  !! new network
+new circuit.example basekv=132 pu=1.0 angle=0 frequency=50 phases=3
+
+  !! time-series demand (and other profiles such as wind data)
+new loadshape.ydemand npts=8760 interval=1.0 csvfile=demand_year.txt
+
+  !! substation transformer
+new transformer.SS phases=3  windings=2  buses=(sourcebus, A)  conns=(wye, wye)  kvs=(132, 33)  kvas=(60000, 60000) %loadloss=0 xhl=12.5
+~ maxtap=1.05 mintap=0.85
+
+  !! substation OLTC (regulator)
+new regcontrol.SS transformer=SS winding=2 tapwinding=1 vreg=(100) ptratio=(33000 3 sqrt / 100 /) band=1
+  !!this band will lead to a final voltage within 0.995-1.005pu
+  !! vreg*ptratio gives the actual target voltage (LN for Wye) at the winding. In this case 1.00pu
+  !! (33000 3 sqrt / 100 /) is RPN for (33000/sqrt(3))/100 = 190.5256
+
+  !! line Codes
+new linecode.ABC nphases=3 R1=2.13444 X1=1.554003 units=km
+new linecode.connector nphases=3 R1=0.00001 X1=0.0 units=km !using fictitious lines to incorporate energy meters
+
+  !! Lines
+new line.lineA-B bus1=A bus2=B length=1 phases=3 units=km linecode=ABC
+new line.lineB-C bus1=B bus2=C length=1 phases=3 units=km linecode=ABC
+new line.conloadB bus1=B bus2=cloadB length=1 phases=3 units=km linecode=connector
+new line.conloadC bus1=C bus2=cloadC length=1 phases=3 units=km linecode=connector
+
+  !! loads (peak values)
+new load.loadB bus1=cloadB phases=3 kV=33 kW=5000 kvar=1640 model=1 class=1 yearly=ydemand status=variable
+new load.loadC bus1=cloadC phases=3 kV=33 kW=5000 kvar=1640 model=1 class=1 yearly=ydemand status=variable
+
+!! obs. loads are being modelled as 'daily' loads with a given load shape, so below the "mode" command has to say 'daily' as well
+!! this has to be consistent, e.g., yearly for loads, yearly for the mode
+
+  !! monitors (to see what happens from a time-series perspective)
+new monitor.SS_HV_P element=transformer.SS terminal=1 mode=1 ppolar=no !active and reactive power
+new monitor.SS_LV_P element=transformer.SS terminal=2 mode=1 ppolar=no 
+new monitor.SS_LV_V element=transformer.SS terminal=2 mode=0 !voltages and currents
+new monitor.Tap element=transformer.SS terminal=2 mode=2 !tap positions in pu
+new monitor.loadB_P element=load.loadB mode=1 ppolar=no
+new monitor.loadB_V element=load.loadB mode= 0
+new monitor.loadC_P element=load.loadC mode=1 ppolar=no
+new monitor.loadC_V element=load.loadC mode= 0
+
+
+new monitor.LineA-B_A element=line.lineA-B terminal=1 mode=1 ppolar=no !active and reactive power
+new monitor.LineA-B_B element=line.lineA-B terminal=2 mode=1 ppolar=no !active and reactive power
+
+  !! meters (to check energy exports/imports, losses)
+new energymeter.GSP element=transformer.SS terminal=1
+new energymeter.mloadB element=line.conloadB terminal=2
+new energymeter.mloadC element=line.conloadC terminal=2
+
+  !! voltage bases to have per unit results when visualising reports
+set voltagebases=[33.0 132.0] 
+calcvoltagebases
+
+!! commands below to be used only with the OpenDSS 'direct' interface - if using Excel, they should be deleted
+
+!set controlmode=time
+!set mode=yearly
+
+!solve
+
+!export monitors SS_HV_P
+!export monitors SS_LV_P
+!export monitors SS_LV_V
+!export monitors Tap
+!export monitor loadB_P
+!export monitor loadB_V
+!export monitor loadC_P
+!export monitor loadC_V
+!export monitor LineA-B_A
+!export monitor LineA-B_B
+!export meters
