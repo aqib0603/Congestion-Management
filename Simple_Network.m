@@ -14,8 +14,8 @@ if DSSStart == 1
     
     DSSText.Command = 'Set ControlMode = time';
     DSSText.Command = 'Reset';
-%     DSSText.Command = 'Set Mode = Yearly Number = ' + string(hours); % This line should be activated for normal operation
-    DSSText.Command = 'Set Mode=yearly number=1';  % Uncomment this line when implementing Auto VAR compensation 
+    DSSText.Command = 'Set Mode = Yearly Number = ' + string(hours); % This line should be activated for normal operation
+%    DSSText.Command = 'Set Mode=yearly number=1';  % Uncomment this line when implementing Auto VAR compensation 
 %%                          ####Creating Problem ####
     % Increasing the Load with factor
     
@@ -35,37 +35,37 @@ if DSSStart == 1
     DSSCircuit.Generators.kW = DSSCircuit.Generators.kW * Ggrowth;
     
     % 2) VAR Compensation 
-    DSSText.Command = 'new load.capacitor bus1=C phases=3 kV=33 kW=0 kvar=0 model=1';
-
-    ijk = 0;
-    for i = 0 : hours
+%    DSSText.Command = 'new load.capacitor bus1=C phases=3 kV=33 kW=0 kvar=0 model=1';
+%
+%    ijk = 0;
+%    for i = 0 : hours
     
-        DSSSolution.Solve
-        DSSCircuit.SetActiveElement('line.lineA-B');
-        powerarray = DSSCircuit.ActiveCktElement.Powers;
-        kVAphaseA = sqrt(powerarray(1)^2 + powerarray(2)^2);
-        useofAB = (3 * kVAphaseA) / (line_capacity * 1000);
-  
-        if ijk == 0 || ijk > 5
-         ijk = 0;
-         if useofAB > 1
-             DSSCircuit.Loads.Name = 'capacitor';
-             DSSCircuit.Loads.kvar = -7000;
-            
-         elseif useofAB < 0.7
-             DSSCircuit.Loads.Name = 'capacitor';
-             DSSCircuit.Loads.kvar = 0;
-         end
-        else 
-         DSSCircuit.Loads.Name = 'capacitor';
-             if DSSCircuit.Loads.kvar == -7000
-                ijk = ijk + 1;
-             end
-        end
-    end
+%        DSSSolution.Solve
+%        DSSCircuit.SetActiveElement('line.lineA-B');
+%        powerarray = DSSCircuit.ActiveCktElement.Powers;
+%        kVAphaseA = sqrt(powerarray(1)^2 + powerarray(2)^2);
+%        useofAB = (3 * kVAphaseA) / (line_capacity * 1000);
+%  
+%        if ijk == 0 || ijk > 5
+%         ijk = 0;
+%         if useofAB > 1
+%             DSSCircuit.Loads.Name = 'capacitor';
+%             DSSCircuit.Loads.kvar = -7000;
+%            
+%         elseif useofAB < 0.7
+%             DSSCircuit.Loads.Name = 'capacitor';
+%             DSSCircuit.Loads.kvar = 0;
+%         end
+%        else 
+%         DSSCircuit.Loads.Name = 'capacitor';
+%             if DSSCircuit.Loads.kvar == -7000
+%                ijk = ijk + 1;
+%             end
+%        end
+%    end
 
 
-%     DSSSolution.Solve % Uncomment for single operation
+     DSSSolution.Solve % This line should be activated for normal operation
 
     %DSSText.Command='Export Monitors SS_HV_P'; % For exporing monitors
     DSSText.Command='Export Meters';
