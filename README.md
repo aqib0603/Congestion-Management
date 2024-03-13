@@ -24,3 +24,5 @@ Congestion management is a vital part of power system operations in the realm of
 
 7) Using VAR Compensation: Uncomment the VAR compensation loop while comenting the lines associated for normal operation (Solve & Yearly Mode) and run
    Note: There is improved results but line has still congestion(Room for Improvement)
+
+This is the simple demonstration of line capacity management and solutions. The main part is the co-simulation of OpenDSS (An opensource powerful distrubution system simulator) with MATLAB via COM interface ability. OpenDSS co-simulation with MATLAB and Python is powerful tool for advanced studies in power system analysis, operation and planning with gird integration of Distributed Energy Resources
